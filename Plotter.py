@@ -25,6 +25,7 @@ class Plotter(object):
 
         for var in self.df.keys():
             if var in extraExceptions: continue
+            print var
             self.df.hist(var)
             #plt.show()
             plt.savefig(os.path.join(out,var+'.pdf'))
@@ -37,12 +38,19 @@ class Plotter(object):
 
         out = os.path.join(self.outputDir,'hists2d_'+varWrt)
         if not os.path.exists(out): os.makedirs(out)
+        out2 = os.path.join(out,'hists1dweighted'+varWrt)
+        if not os.path.exists(out2): os.makedirs(out2)
+
 
         for var in self.df.keys():
             if var in extraExceptions: continue
-            self.df.hist2d(varWrt,var)
+            #self.df.hist2d(varWrt,var)
+            plt.hist2d(self.df[varWrt],self.df[var])
             #plt.show()
             plt.savefig(os.path.join(out,var+'.pdf'))
+            plt.close()
+            plt.hist(self.df[var],weights=self.df[varWrt])
+            plt.savefig(os.path.join(out2,var+'.pdf'))
             plt.close()
 
         return True
