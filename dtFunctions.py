@@ -16,7 +16,7 @@ def featureImportance(df,classifier,output,exceptions=[]):
     '''
 
     # Build a forest and compute the feature importances
-    forest = ExtraTreesClassifier(n_estimators=250,
+    forest = ExtraTreesClassifier(n_estimators=1000,
                                   random_state=0)
 
     # Make the array of features, X, and the classifier, y

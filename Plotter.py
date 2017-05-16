@@ -33,7 +33,7 @@ class Plotter(object):
 
         return True
 
-    def plotAllHists2D(self,varWrt,extraExceptions=[]):
+    def plotAllHists2D(self,varWrt,extraExceptions=[],binsVarWrt=(10,None,None)):
         '''A function to plot sensible 2D histograms of all the columns of a dataframe'''
 
         out = os.path.join(self.outputDir,'hists2d_'+varWrt)
@@ -45,7 +45,11 @@ class Plotter(object):
         for var in self.df.keys():
             if var in extraExceptions: continue
             #self.df.hist2d(varWrt,var)
-            plt.hist2d(self.df[varWrt],self.df[var])
+            #Find the variable limits
+            maxVar = round(max(self.df[var]),-1) + 10
+            minVar = round(min(self.df[var]),-1)
+
+            plt.hist2d(self.df[varWrt],self.df[var],bins=[binsVarWrt[0],20],range=[[binsVarWrt[1],binsVarWrt[2]],[minVar,maxVar]])
             #plt.show()
             plt.savefig(os.path.join(out,var+'.pdf'))
             plt.close()
@@ -56,7 +60,7 @@ class Plotter(object):
         return True
 
 
-    def correlations(self, extraExceptions=[], **kwds):
+    def correlations(self, subset=None, extraStr='',**kwds):
         """Calculate pairwise correlation between features.
         
         Extra arguments are passed on to DataFrame.corr()
@@ -76,8 +80,12 @@ class Plotter(object):
 
         # data.columns.values.tolist()
         #exit()
-
-        corrmat = self.df.corr(**kwds)
+        
+        if subset==None:
+            corrmat = self.df.corr(**kwds)
+        else:
+            #ignore the things that aren't in the subset
+            corrmat = self.df[subset].corr(**kwds)
 
         fig, ax1 = plt.subplots(ncols=1, figsize=(9,8))
         
@@ -97,7 +105,7 @@ class Plotter(object):
             ax.set_yticklabels(labels, minor=False)
             
         plt.tight_layout()
-        plt.savefig(os.path.join(self.outputDir,'correlations.pdf'))
+        plt.savefig(os.path.join(self.outputDir,'correlations'+extraStr+'.pdf'))
         plt.close()
 
 
