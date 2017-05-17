@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+from histFunctions import hist1dError
+
 class Plotter(object):
     '''A class that is initialised with a dataframe and can be used to plot histograms of all variables etc'''
     def __init__(self,df,outputDir,exceptions=[],binDict={}):
@@ -25,15 +27,19 @@ class Plotter(object):
 
         for var in self.df.keys():
             if var in extraExceptions: continue
-            print var
-            self.df.hist(var)
-            #plt.show()
+
+            #simple way without error bars:
+            #self.df.hist(var)
+
+            #proper way with error bars
+            hist1dError(self.df[var])
+
             plt.savefig(os.path.join(out,var+'.pdf'))
             plt.close()
 
         return True
 
-    def plotAllHists2D(self,varWrt,extraExceptions=[],binsVarWrt=(10,None,None)):
+    def plotAllHists2D(self,varWrt,extraExceptions=[],binsVarWrt=(10,None,None),asScatter=False):
         '''A function to plot sensible 2D histograms of all the columns of a dataframe'''
 
         out = os.path.join(self.outputDir,'hists2d_'+varWrt)
@@ -46,14 +52,29 @@ class Plotter(object):
             if var in extraExceptions: continue
             #self.df.hist2d(varWrt,var)
             #Find the variable limits
-            maxVar = round(max(self.df[var]),-1) + 10
-            minVar = round(min(self.df[var]),-1)
 
-            plt.hist2d(self.df[varWrt],self.df[var],bins=[binsVarWrt[0],20],range=[[binsVarWrt[1],binsVarWrt[2]],[minVar,maxVar]])
-            #plt.show()
-            plt.savefig(os.path.join(out,var+'.pdf'))
-            plt.close()
-            plt.hist(self.df[var],weights=self.df[varWrt])
+            if not asScatter:
+                maxVar = round(max(self.df[var]),-1)
+                minVar = round(min(self.df[var]),-1)
+
+                plt.hist2d(self.df[varWrt],self.df[var],bins=[binsVarWrt[0],20],range=[[binsVarWrt[1],binsVarWrt[2]],[minVar,maxVar]])
+                #plt.show()
+                plt.savefig(os.path.join(out,var+'.pdf'))
+                plt.close()
+
+            else:
+                plt.scatter(self.df[varWrt],self.df[var])
+                #plt.xlim(binsVarWrt[1],binsVarWrt[2])
+                # plt.show()
+                # exit()
+                plt.savefig(os.path.join(out,var+'.pdf'))
+                plt.close()
+                pass
+
+            #plt.hist(self.df[var],weights=self.df[varWrt])
+            hist1dError(self.df[var],weights=self.df[varWrt],bins=20)
+            
+
             plt.savefig(os.path.join(out2,var+'.pdf'))
             plt.close()
 

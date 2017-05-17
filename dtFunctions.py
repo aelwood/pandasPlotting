@@ -8,7 +8,7 @@ def classifyScore(score,classification=0):
     if score > classification: return 1
     else: return 0
 
-def featureImportance(df,classifier,output,exceptions=[]):
+def featureImportance(df,classifier,output,exceptions=[],error=False):
     '''Classify the variable importance for a given set of trees code is taken
     from:
     http://scikit-learn.org/stable/auto_examples/ensemble/plot_forest_importances.html\
@@ -42,8 +42,12 @@ def featureImportance(df,classifier,output,exceptions=[]):
     # Plot the feature importances of the forest
     plt.figure()
     plt.title("Feature importances")
-    plt.bar(range(X.shape[1]), importances[indices],
-           color="r", yerr=std[indices], align="center")
+    if error:
+        plt.bar(range(X.shape[1]), importances[indices],
+               color="r", yerr=std[indices], align="center")
+    else:
+        plt.bar(range(X.shape[1]), importances[indices],
+               color="r", align="center")
     plt.xticks(range(X.shape[1]), indices)
     plt.xlim([-1, X.shape[1]])
     plt.savefig(os.path.join(output,'featureImportances.pdf'))
