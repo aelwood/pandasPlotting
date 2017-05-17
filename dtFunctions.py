@@ -1,4 +1,5 @@
 from sklearn.ensemble import ExtraTreesClassifier
+from sklearn.tree import DecisionTreeClassifier,export_graphviz
 import numpy as np
 import matplotlib.pyplot as plt
 import os
@@ -52,6 +53,42 @@ def featureImportance(df,classifier,output,exceptions=[],error=False):
     plt.xlim([-1, X.shape[1]])
     plt.savefig(os.path.join(output,'featureImportances.pdf'))
     plt.close()
+
+    pass
+
+def decisionTree(df,classifier,output,subset=None,drawTree=False,**kwargs):
+
+    out = os.path.join(output,'decisionTree')
+    if not os.path.exists(out): os.makedirs(out)
+
+    dt =  DecisionTreeClassifier(**kwargs)
+
+    y = df[classifier]#[:-1000]
+    if subset!=None:
+        X = df[subset]#[:-1000]
+    else:
+        X = df.drop(classifier,axis=1)
+
+    dt.fit(X,y)
+
+    if drawTree:
+        #Print out the tree
+        outTree=os.path.join(out,'tree.dot')
+        export_graphviz(dt,out_file=outTree,feature_names=X.columns.values.tolist(),\
+                        filled=True, rounded=True,special_characters=True)
+        os.system('dot -Tpng '+outTree+' -o '+os.path.join(out,'tree.png'))
+
+    #predicted = dt.predict(X)
+    predicted = dt.predict(X)#[-1000:])
+    #df=df[-1000:]
+
+    print 'Pre tree profit:',df['adjustedprofit'].sum()
+    print 'Post tree 1 profit:',df[predicted==1]['adjustedprofit'].sum()
+    print 'Post tree 0 profit:',df[predicted==0]['adjustedprofit'].sum()
+    print 'Godlike 1 profit:',df[df['y_adjustedprofit']==1]['adjustedprofit'].sum()
+    print 'Godlike 0 profit:',df[df['y_adjustedprofit']==0]['adjustedprofit'].sum()
+    exit()
+
 
     pass
 
