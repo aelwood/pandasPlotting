@@ -2,6 +2,7 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 from histFunctions import hist1dError
 
@@ -44,8 +45,6 @@ class Plotter(object):
 
         out = os.path.join(self.outputDir,'hists2d_'+varWrt)
         if not os.path.exists(out): os.makedirs(out)
-        out2 = os.path.join(out,'hists1dweighted'+varWrt)
-        if not os.path.exists(out2): os.makedirs(out2)
 
 
         for var in self.df.keys():
@@ -72,14 +71,44 @@ class Plotter(object):
                 pass
 
             #plt.hist(self.df[var],weights=self.df[varWrt])
-            hist1dError(self.df[var],weights=self.df[varWrt],bins=20)
+            #hist1dError(self.df[var],weights=self.df[varWrt],bins=20)
             
+            # plt.savefig(os.path.join(out2,var+'.pdf'))
+            # plt.close()
 
-            plt.savefig(os.path.join(out2,var+'.pdf'))
+        return True
+
+    def plotAllHists1DWeighted(self,varWrt,extraExceptions=[]):
+
+        out = os.path.join(self.outputDir,'hists1dweighted'+varWrt)
+        if not os.path.exists(out): os.makedirs(out)
+
+        for var in self.df.keys():
+            if var in extraExceptions: continue
+            hist1dError(self.df[var],weights=self.df[varWrt],bins=20)
+            plt.savefig(os.path.join(out,var+'.pdf'))
             plt.close()
 
         return True
 
+    def plotAllHists2DSns(self,varWrt,extraExceptions=[],pairPlot=False,**kwargs):
+
+        if pairPlot: append='PP'
+        else: append='JP'
+        out = os.path.join(self.outputDir,'hists2dSns'+append+varWrt)
+        if not os.path.exists(out): os.makedirs(out)
+
+        for var in self.df.keys():
+            if var in extraExceptions: continue
+            if pairPlot:
+                sns.pairplot(self.df,vars=[varWrt,var],**kwargs)
+            else:
+                sns.jointplot(varWrt,var,data=self.df)
+            plt.savefig(os.path.join(out,var+'.pdf'))
+            plt.close()
+
+        return True
+    
 
     def correlations(self, subset=None, extraStr='',**kwds):
         """Calculate pairwise correlation between features.
