@@ -115,6 +115,16 @@ def decisionTree(df,classifier,profit,output,subset=None,split=None,drawTree=Fal
                         filled=True, rounded=True,special_characters=True)
         os.system('dot -Tpng '+outTree+' -o '+os.path.join(out,'tree.png'))
 
+    #feature importances
+    featuresOut = open(os.path.join(out,'featureImportances.txt'),'w')
+
+    featuresOut.write("Feature ranking:\n")
+
+    featureIndices = np.argsort(dt.feature_importances_)[::-1]
+    for f in range(X_train.shape[1]):
+        featuresOut.write("%d. feature %s (%f)" % (f + 1, X_train.columns.values.tolist()[featureIndices[f]], dt.feature_importances_[featureIndices[f]])+'\n')
+
+ 
     #Assess how it did for train and test
 
     resultOut = {
@@ -131,13 +141,15 @@ def decisionTree(df,classifier,profit,output,subset=None,split=None,drawTree=Fal
         phrase =' '.join([str(x) for x in phrase])
         print ' >> ',phrase
         textOut.write(phrase+'\n') 
+
     
+    # different assessment of test and training sets
     for name,data in resultOut.iteritems():
 
         predicted = dt.predict(data['X'])
 
         #Basic profit info
-        myPrint(('>>>>>>>'))
+        myPrint(('>>>>>>>',))
         myPrint((name,'set'))
         myPrint(('Pre tree profit:',data['df'][profit].sum()))
         myPrint(('Post tree 1 profit:',data['df'][predicted==1][profit].sum()))
@@ -147,11 +159,13 @@ def decisionTree(df,classifier,profit,output,subset=None,split=None,drawTree=Fal
 
         #output tree performance
         correct = (predicted==data['df'][classifier]).sum()
-        myPrint(('Correct/Total',correct*100.0/len(predicted),'%'))
-        myPrint(('Cohens-Kappa (% better than random)',round(cohen_kappa_score(data['df'][classifier],predicted)*100,1),'%\n'))
+        myPrint(('Correct/Total',round(correct*100.0/len(predicted),1),'%'))
+        myPrint(('Cohens kappa (% better than random)',round(cohen_kappa_score(data['df'][classifier],predicted)*100,1),'%\n'))
 
         #make a ROC curve
         #...
+
+
 
     return True
 
