@@ -1,5 +1,6 @@
 from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.tree import DecisionTreeClassifier,export_graphviz
+from sklearn.metrics import cohen_kappa_score
 import numpy as np
 import matplotlib.pyplot as plt
 import os
@@ -56,39 +57,101 @@ def featureImportance(df,classifier,output,exceptions=[],error=False):
 
     pass
 
-def decisionTree(df,classifier,output,subset=None,drawTree=False,**kwargs):
+def decisionTree(df,classifier,profit,output,subset=None,split=None,drawTree=False,append='',**kwargs):
 
-    out = os.path.join(output,'decisionTree')
+    #Define and make the output
+    out = os.path.join(output,'decisionTree',append)
     if not os.path.exists(out): os.makedirs(out)
 
+    #Build the tree and partition the data
     dt =  DecisionTreeClassifier(**kwargs)
 
-    y = df[classifier]#[:-1000]
+    y = df[classifier]
     if subset!=None:
-        X = df[subset]#[:-1000]
+        X = df[subset]
     else:
         X = df.drop(classifier,axis=1)
 
-    dt.fit(X,y)
+    #Now split into testing and training
+    if isinstance(split,list):
+
+        # if it's a list split based on the list
+        assert len(split)==2
+        assert split[0]+split[1]==1
+        trainLen=int(len(X)*split[0])
+
+        X_test=X[trainLen:]
+        X_train=X[:trainLen]
+        y_test=y[trainLen:]
+        y_train=y[:trainLen]
+        df_test=df[trainLen:]
+        df_train=df[:trainLen]
+
+    elif isinstance(split,str):
+        if split=='kfold': 
+            print 'kfold not implemented'
+            return False
+        else:
+            print split,'not implemented, not doing decision tree'
+            return False
+    else:
+        # train and test on the same thing
+        X_test=X
+        X_train=X
+        y_test=y
+        y_train=y
+        df_test=df
+        df_train=df
+
+    # Now carry out the fit on the training set
+    dt.fit(X_train,y_train)
+
+    #Make the outputs of the tree
 
     if drawTree:
         #Print out the tree
         outTree=os.path.join(out,'tree.dot')
-        export_graphviz(dt,out_file=outTree,feature_names=X.columns.values.tolist(),\
+        export_graphviz(dt,out_file=outTree,feature_names=X_train.columns.values.tolist(),\
                         filled=True, rounded=True,special_characters=True)
         os.system('dot -Tpng '+outTree+' -o '+os.path.join(out,'tree.png'))
 
-    #predicted = dt.predict(X)
-    predicted = dt.predict(X)#[-1000:])
-    #df=df[-1000:]
+    #Assess how it did for train and test
 
-    print 'Pre tree profit:',df['adjustedprofit'].sum()
-    print 'Post tree 1 profit:',df[predicted==1]['adjustedprofit'].sum()
-    print 'Post tree 0 profit:',df[predicted==0]['adjustedprofit'].sum()
-    print 'Godlike 1 profit:',df[df['y_adjustedprofit']==1]['adjustedprofit'].sum()
-    print 'Godlike 0 profit:',df[df['y_adjustedprofit']==0]['adjustedprofit'].sum()
-    exit()
+    resultOut = {
+            'Train':{'X':X_train,'y':y_train,'df':df_train},
+            'Test':{'X':X_test,'y':y_test,'df':df_test},
+            }
 
+    textOut = open(os.path.join(out,'dtResults.txt'),'w')
+    #write the config
+    textOut.write('training split: '+str(split)+'\n')
+    textOut.write('DT inputs '+str(kwargs)+'\n\n')
 
-    pass
+    def myPrint(phrase):
+        phrase =' '.join([str(x) for x in phrase])
+        print ' >> ',phrase
+        textOut.write(phrase+'\n') 
+    
+    for name,data in resultOut.iteritems():
+
+        predicted = dt.predict(data['X'])
+
+        #Basic profit info
+        myPrint(('>>>>>>>'))
+        myPrint((name,'set'))
+        myPrint(('Pre tree profit:',data['df'][profit].sum()))
+        myPrint(('Post tree 1 profit:',data['df'][predicted==1][profit].sum()))
+        myPrint(('Post tree 0 profit:',data['df'][predicted==0][profit].sum()))
+        myPrint(('Godlike 1 profit:',data['df'][data['df'][classifier]==1][profit].sum()))
+        myPrint(('Godlike 0 profit:',data['df'][data['df'][classifier]==0][profit].sum(),'\n'))
+
+        #output tree performance
+        correct = (predicted==data['df'][classifier]).sum()
+        myPrint(('Correct/Total',correct*100.0/len(predicted),'%'))
+        myPrint(('Cohens-Kappa (% better than random)',round(cohen_kappa_score(data['df'][classifier],predicted)*100,1),'%\n'))
+
+        #make a ROC curve
+        #...
+
+    return True
 
