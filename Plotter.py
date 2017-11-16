@@ -19,7 +19,7 @@ class Plotter(object):
         for drop in exceptions:
             self.df.drop(drop,axis=1,inplace=True)
 
-    def plotAllHists1D(self,extraExceptions=[]):
+    def plotAllHists1D(self,extraExceptions=[],withErrors=False,bins=30):
         '''A function to plot sensible 1D histograms of all the columns of a dataframe excluding exceptions'''
 
         out = os.path.join(self.outputDir,'hists1d')
@@ -28,11 +28,12 @@ class Plotter(object):
         for var in self.df.keys():
             if var in extraExceptions: continue
 
-            #simple way without error bars:
-            #self.df.hist(var)
-
-            #proper way with error bars
-            hist1dError(self.df[var])
+            if not withErrors:
+                #simple way without error bars:
+                self.df.hist(var,bins=30)
+            else:
+                #proper way with error bars
+                hist1dError(self.df[var],bins=30)
 
             plt.savefig(os.path.join(out,var+'.pdf'))
             plt.close()
