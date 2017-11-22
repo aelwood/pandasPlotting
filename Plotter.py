@@ -28,25 +28,23 @@ class Plotter(object):
         for var in self.df.keys():
             if var in extraExceptions: continue
 
-            # print var
-            # print self.df[var].dtype.kind
-
-
             #If have an array expand it before making histogram
-            if self.df[var].dtype.kind is 'O':
+            if hasattr(self.df[var].iloc[0], "__len__"):
                 #Expand it into one array
                 toDraw = [val for arr in self.df[var] for val in arr]
             else:
                 toDraw = self.df[var]
 
             #print toDraw
+            # print var
+            # print toDraw
 
             if not withErrors:
                 #simple way without error bars:
-                plt.hist(toDraw,bins=30)
+                plt.hist(toDraw.dropna(),bins=30)
             else:
                 #proper way with error bars
-                hist1dError(toDraw,bins=30)
+                hist1dError(toDraw.dropna(),bins=30)
 
             plt.savefig(os.path.join(out,var+'.pdf'))
             plt.close()
