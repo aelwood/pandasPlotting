@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('Agg')
 from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.tree import DecisionTreeClassifier,export_graphviz
 from sklearn.metrics import cohen_kappa_score
@@ -18,7 +20,7 @@ def featureImportance(df,classifier,output,exceptions=[],error=False):
     '''
 
     # Build a forest and compute the feature importances
-    forest = ExtraTreesClassifier(n_estimators=10000,
+    forest = ExtraTreesClassifier(n_estimators=1000,
                                   random_state=0)
 
     # Make the array of features, X, and the classifier, y
@@ -35,6 +37,7 @@ def featureImportance(df,classifier,output,exceptions=[],error=False):
     indices = np.argsort(importances)[::-1]
 
     # Print the feature ranking
+    if not os.path.exists(output): os.makedirs(output)
     outTxtFile = open(os.path.join(output,'featureList.txt'),'w')
     outTxtFile.write("Feature ranking:\n")
 
