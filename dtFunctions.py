@@ -1,5 +1,3 @@
-import matplotlib
-matplotlib.use('Agg')
 from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.tree import DecisionTreeClassifier,export_graphviz
 from sklearn.metrics import cohen_kappa_score
