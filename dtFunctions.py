@@ -25,6 +25,9 @@ def featureImportance(df,classifier,output,exceptions=[],error=False):
 
     y = df[classifier]
     X = df.drop(classifier,axis=1)
+
+    #Remove duplicates
+    X = X.loc[:,~X.columns.duplicated()]
     for e in exceptions:
         X.drop(e,axis=1,inplace=True)        
 
