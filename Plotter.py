@@ -17,7 +17,7 @@ class Plotter(object):
         #In the case of exceptions drop them from the data frame
         self.exceptions = exceptions
         for drop in exceptions:
-            self.df.drop(drop,axis=1,inplace=True)
+            self.df = self.df.drop(drop,axis=1)
 
     def plotAllHists1D(self,extraExceptions=[],withErrors=False,bins=30):
         '''A function to plot sensible 1D histograms of all the columns of a dataframe excluding exceptions'''
@@ -50,6 +50,37 @@ class Plotter(object):
             plt.close()
 
         return True
+
+    def plotAllStackedHists1D(self,category,extraExceptions=[],weights=None,bins=30):
+
+        out = os.path.join(self.outputDir,'hists1dStacked')
+        if not os.path.exists(out): os.makedirs(out)
+
+        for var in self.df.keys():
+            if var in extraExceptions: continue
+
+            # #If have an array expand it before making histogram
+            # if hasattr(self.df[var].iloc[0], "__len__"):
+            #     #Expand it into one array
+            #     toDraw = [val for arr in self.df[var] for val in arr]
+            # else:
+            #     toDraw = self.df[var]
+
+            #Get unique values of category
+            cats = self.df[category].unique()
+
+            if weights is not None: weights = [self.df[self.df[category]==i][weights] for i in cats]
+
+            plt.hist([self.df[self.df[category]==i][var] for i in cats],label=['cat '+str(i) for i in cats],
+                              bins=bins, stacked=True, weights=weights)
+            plt.xlabel(var)
+            plt.legend()
+            plt.savefig(os.path.join(out,var+'.pdf'))
+            plt.close()
+
+        return True
+
+
 
     def plotAllHists2D(self,varWrt,extraExceptions=[],binsVarWrt=(10,None,None),asScatter=False):
         '''A function to plot sensible 2D histograms of all the columns of a dataframe'''
