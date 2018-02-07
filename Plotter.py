@@ -51,7 +51,7 @@ class Plotter(object):
 
         return True
 
-    def plotAllStackedHists1D(self,category,extraExceptions=[],weights=None,bins=30):
+    def plotAllStackedHists1D(self,category,extraExceptions=[],weights=None,bins=30,log=False):
 
         out = os.path.join(self.outputDir,'hists1dStacked')
         if not os.path.exists(out): os.makedirs(out)
@@ -67,14 +67,17 @@ class Plotter(object):
             #     toDraw = self.df[var]
 
             #Get unique values of category
-            cats = self.df[category].unique()
+            cats = self.df[category].unique()#[::-1]
 
-            if weights is not None: weights = [self.df[self.df[category]==i][weights] for i in cats]
-
-            plt.hist([self.df[self.df[category]==i][var] for i in cats],label=['cat '+str(i) for i in cats],
-                              bins=bins, stacked=True, weights=weights)
+            if weights is not None:
+                plt.hist([self.df[self.df[category]==i][var] for i in cats],label=['cat '+str(i) for i in cats],
+                                  bins=bins, stacked=True, weights= [self.df[self.df[category]==i][weights] for i in cats])
+            else:
+                plt.hist([self.df[self.df[category]==i][var] for i in cats],label=['cat '+str(i) for i in cats],
+                                  bins=bins, stacked=True)
             plt.xlabel(var)
             plt.legend()
+            if log: plt.yscale('log')
             plt.savefig(os.path.join(out,var+'.pdf'))
             plt.close()
 
